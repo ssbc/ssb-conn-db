@@ -1,0 +1,5 @@
+{
+  "net:staltz.com:8008~noauth": {
+    "source": "stored"
+  }
+}

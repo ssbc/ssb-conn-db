@@ -1,0 +1,29 @@
+{
+  "name": "ssb-conn-db",
+  "description": "Module that manages a local registry of connectable peers",
+  "version": "0.0.1",
+  "homepage": "https://github.com/staltz/ssb-conn-db",
+  "main": "lib/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/staltz/ssb-conn-db.git"
+  },
+  "dependencies": {
+    "atomic-file": "^1.1.5",
+    "pull-notify": "~0.1.1",
+    "multiserver-address": "~1.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^11.10.4",
+    "pull-stream": "^3.6.9",
+    "tape": "^4.9.2",
+    "typescript": "3.3.x"
+  },
+  "scripts": {
+    "typescript": "tsc",
+    "tape": "set -e; for t in test/*.js; do node $t; done",
+    "test": "npm run typescript && npm run tape"
+  },
+  "author": "Andre Staltz <contact@staltz.com> (http://staltz.com)",
+  "license": "MIT"
+}
