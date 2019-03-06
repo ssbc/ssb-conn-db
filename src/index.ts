@@ -133,6 +133,24 @@ class ConnDB {
     return this;
   }
 
+  public update(address: string, data: AddressData): ConnDB {
+    if (!msAddress.check(address)) {
+      throw new Error('The given address is not a valid multiserver-address');
+    }
+    if (!data || typeof data !== 'object') {
+      throw new Error('The given connection data should have been an object');
+    }
+
+    const existed = this._map.has(address);
+    if (!existed) return this;
+
+    const previous = this._map.get(address);
+    this._map.set(address, {...previous, ...data});
+    this._notify({type: 'update', address} as ListenEvent);
+    this._scheduleWrite();
+    return this;
+  }
+
   public get(address: string): AddressData {
     return this._map.get(address);
   }

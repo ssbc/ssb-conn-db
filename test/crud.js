@@ -126,6 +126,64 @@ tape('CRUD: set() with undefined deletes the property', function(t) {
   }, 200);
 });
 
+tape('CRUD: update() works', function(t) {
+  const dirPath = path.join(__dirname, './example');
+  const connJSONPath = path.join(dirPath, './conn.json');
+  const connDataBefore = fs.readFileSync(connJSONPath, 'utf8');
+
+  const connDB = new ConnDB({path: dirPath, writeTimeout: 0});
+  t.ok(connDB, 'connDB instance was created');
+
+  setTimeout(() => {
+    const exists = connDB.has('net:staltz.com:8008~noauth');
+    t.true(exists, 'address to be updated is in the database');
+
+    const connDB2 = connDB.update('net:staltz.com:8008~noauth', {
+      failure: 0,
+    });
+
+    t.strictEquals(connDB2, connDB, 'update() returns the instance');
+
+    setTimeout(() => {
+      const connDataAfter = fs.readFileSync(connJSONPath, 'utf8');
+      t.notEquals(connDataAfter, connDataBefore, 'conn.json changed');
+
+      fs.writeFileSync(connJSONPath, connDataBefore);
+      t.pass('teardown');
+      t.end();
+    }, 200);
+  }, 200);
+});
+
+tape('CRUD: update() is incapable of inserting', function(t) {
+  const dirPath = path.join(__dirname, './example');
+  const connJSONPath = path.join(dirPath, './conn.json');
+  const connDataBefore = fs.readFileSync(connJSONPath, 'utf8');
+
+  const connDB = new ConnDB({path: dirPath, writeTimeout: 0});
+  t.ok(connDB, 'connDB instance was created');
+
+  setTimeout(() => {
+    const exists = connDB.has('net:scuttlebutt.nz:8008~noauth');
+    t.false(exists, 'address to be updated is not yet in the database');
+
+    const connDB2 = connDB.update('net:scuttlebutt.nz:8008~noauth', {
+      source: 'stored',
+    });
+
+    t.strictEquals(connDB2, connDB, 'update() returns the instance');
+
+    setTimeout(() => {
+      const connDataAfter = fs.readFileSync(connJSONPath, 'utf8');
+      t.equals(connDataAfter, connDataBefore, 'conn.json stayed untouched');
+
+      fs.writeFileSync(connJSONPath, connDataBefore);
+      t.pass('teardown');
+      t.end();
+    }, 200);
+  }, 200);
+});
+
 tape('CRUD: delete() works', function(t) {
   const dirPath = path.join(__dirname, './example');
   const connJSONPath = path.join(dirPath, './conn.json');
