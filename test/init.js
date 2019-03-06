@@ -126,3 +126,19 @@ tape('init: load when conn.json=present, gossip.json=present', function(t) {
     t.end();
   }, 500);
 });
+
+tape('init: loaded() promise works', function(t) {
+  const dirPath = path.join(__dirname, './example');
+  const connDB = new ConnDB({path: dirPath});
+  t.ok(connDB, 'connDB instance was created');
+  const entries = Array.from(connDB.entries());
+  t.equals(entries.length, 0, 'before loaded(), there is no data');
+  connDB.loaded().then(() => {
+    const entries = Array.from(connDB.entries());
+    t.equals(entries.length, 1, 'after loaded(), there is data');
+    const [address, data] = entries[0];
+    t.equals(address, 'net:staltz.com:8008~noauth', 'the address looks ok');
+    t.equals(data.source, 'stored', 'the data for that address looks ok');
+    t.end();
+  });
+});

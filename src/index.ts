@@ -17,6 +17,9 @@ class ConnDB {
   private readonly _notify: any;
   private readonly _stateFile: any;
   private readonly _writeTimeout: number;
+  private readonly _loadedPromise: Promise<true>;
+  private _loadedResolve!: (val: true) => void;
+  private _loadedReject!: (err: any) => void;
   private _scheduledWriteTask: NodeJS.Timeout | null;
 
   constructor(opts: Partial<Opts>) {
@@ -31,6 +34,10 @@ class ConnDB {
         ? opts.writeTimeout
         : defaultOpts.writeTimeout;
     this._scheduledWriteTask = null;
+    this._loadedPromise = new Promise((resolve, reject) => {
+      this._loadedResolve = resolve;
+      this._loadedReject = reject;
+    });
     this._init(modernPath, legacyPath);
   }
 
@@ -40,15 +47,23 @@ class ConnDB {
 
     if (!modernExists && !legacyExists) {
       this._stateFile.set({}, () => {});
+      this._loadedResolve(true);
       return;
     }
 
     if (!modernExists && legacyExists) {
       const legacyStateFile = AtomicFile(legacyPath);
       legacyStateFile.get((err: any, oldVals: any) => {
-        if (err) throw new Error('Failed to load gossip.json');
+        if (err) {
+          this._loadedReject(err);
+          return;
+        }
         const newVals = migrateMany(oldVals);
-        return this._stateFile.set(newVals, (_err2: any) => {
+        return this._stateFile.set(newVals, (err2: any) => {
+          if (err2) {
+            this._loadedReject(err2);
+            return;
+          }
           this._load(newVals);
         });
       });
@@ -56,7 +71,11 @@ class ConnDB {
     }
 
     if (modernExists) {
-      this._stateFile.get((_err: any, vals: any) => {
+      this._stateFile.get((err: any, vals: any) => {
+        if (err) {
+          this._loadedReject(err);
+          return;
+        }
         this._load(vals);
       });
     }
@@ -67,6 +86,7 @@ class ConnDB {
     for (let key of keys) {
       this._map.set(key, vals[key]);
     }
+    this._loadedResolve(true);
   }
 
   private _serialize(): Record<string, AddressData> {
@@ -174,6 +194,10 @@ class ConnDB {
 
   public listen() {
     return this._notify.listen();
+  }
+
+  public loaded(): Promise<true> {
+    return this._loadedPromise;
   }
 }
 

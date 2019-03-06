@@ -40,6 +40,7 @@ const connPlugin = {
 * `connDB.delete(address)`: remove an address and its associated data from the database. Returns `true` if the address existed and was deleted, `false` otherwise.
 * `connDB.entries()`: returns a new `Iterator` object that gives `[address, data]` pairs
 * `connDB.listen()`: returns a pull stream that notifies of changes made to the database, as an object `{type, address}` where `type` is either `'insert'`, `'update'`, or `'delete'`
+* `connDB.loaded()`: returns a Promise that resolves successfully when the initial database loading (read) occurs, and rejects if there was a failure to load.
 
 Notice that the API above mostly mirrors the API of the JavaScript [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map).
 
