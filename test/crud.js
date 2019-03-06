@@ -97,6 +97,35 @@ tape('CRUD: set() works', function(t) {
   }, 200);
 });
 
+tape('CRUD: set() with undefined deletes the property', function(t) {
+  const dirPath = path.join(__dirname, './example');
+  const connJSONPath = path.join(dirPath, './conn.json');
+  const connDataBefore = fs.readFileSync(connJSONPath, 'utf8');
+
+  const connDB = new ConnDB({path: dirPath, writeTimeout: 0});
+  t.ok(connDB, 'connDB instance was created');
+
+  setTimeout(() => {
+    const exists = connDB.has('net:staltz.com:8008~noauth');
+    t.true(exists, 'address to be updated is in the database');
+
+    const connDB2 = connDB.set('net:staltz.com:8008~noauth', {
+      source: undefined,
+    });
+
+    t.strictEquals(connDB2, connDB, 'set() returns the instance');
+
+    setTimeout(() => {
+      const connDataAfter = fs.readFileSync(connJSONPath, 'utf8');
+      t.notEquals(connDataAfter, connDataBefore, 'conn.json changed');
+
+      fs.writeFileSync(connJSONPath, connDataBefore);
+      t.pass('teardown');
+      t.end();
+    }, 200);
+  }, 200);
+});
+
 tape('CRUD: delete() works', function(t) {
   const dirPath = path.join(__dirname, './example');
   const connJSONPath = path.join(dirPath, './conn.json');
