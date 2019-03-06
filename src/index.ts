@@ -93,15 +93,40 @@ class ConnDB {
   //// PUBLIC API
   ///////////////
 
-  public set(address: string, data: AddressData): ConnDB {
-    const existed = this._map.has(address);
+  public replace(address: string, data: AddressData): ConnDB {
     if (!msAddress.check(address)) {
       throw new Error('The given address is not a valid multiserver-address');
     }
+    if (!data || typeof data !== 'object') {
+      throw new Error('The given connection data should have been an object');
+    }
+
+    const existed = this._map.has(address);
     this._map.set(address, data);
     if (existed) {
       this._notify({type: 'update', address} as ListenEvent);
     } else {
+      this._notify({type: 'insert', address} as ListenEvent);
+    }
+    this._scheduleWrite();
+    return this;
+  }
+
+  public set(address: string, data: AddressData): ConnDB {
+    if (!msAddress.check(address)) {
+      throw new Error('The given address is not a valid multiserver-address');
+    }
+    if (!data || typeof data !== 'object') {
+      throw new Error('The given connection data should have been an object');
+    }
+
+    const existed = this._map.has(address);
+    if (existed) {
+      const previous = this._map.get(address);
+      this._map.set(address, {...previous, ...data});
+      this._notify({type: 'update', address} as ListenEvent);
+    } else {
+      this._map.set(address, data);
       this._notify({type: 'insert', address} as ListenEvent);
     }
     this._scheduleWrite();
