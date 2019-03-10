@@ -1,7 +1,7 @@
 {
   "name": "ssb-conn-db",
   "description": "Module that manages a local registry of connectable peers",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "homepage": "https://github.com/staltz/ssb-conn-db",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
