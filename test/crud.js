@@ -126,7 +126,7 @@ tape('CRUD: set() with undefined deletes the property', function(t) {
   }, 200);
 });
 
-tape('CRUD: update() works', function(t) {
+tape('CRUD: update() works with object argument', function(t) {
   const dirPath = path.join(__dirname, './example');
   const connJSONPath = path.join(dirPath, './conn.json');
   const connDataBefore = fs.readFileSync(connJSONPath, 'utf8');
@@ -146,6 +146,36 @@ tape('CRUD: update() works', function(t) {
 
     setTimeout(() => {
       const connDataAfter = fs.readFileSync(connJSONPath, 'utf8');
+      t.notEquals(connDataAfter, connDataBefore, 'conn.json changed');
+
+      fs.writeFileSync(connJSONPath, connDataBefore);
+      t.pass('teardown');
+      t.end();
+    }, 200);
+  }, 200);
+});
+
+tape('CRUD: update() works with function argument', function(t) {
+  const dirPath = path.join(__dirname, './example');
+  const connJSONPath = path.join(dirPath, './conn.json');
+  const connDataBefore = fs.readFileSync(connJSONPath, 'utf8');
+
+  const connDB = new ConnDB({path: dirPath, writeTimeout: 0});
+  t.ok(connDB, 'connDB instance was created');
+
+  setTimeout(() => {
+    const exists = connDB.has('net:staltz.com:8008~noauth');
+    t.true(exists, 'address to be updated is in the database');
+
+    const connDB2 = connDB.update('net:staltz.com:8008~noauth', prev => ({
+      source: prev.source.toUpperCase(),
+    }));
+
+    t.strictEquals(connDB2, connDB, 'update() returns the instance');
+
+    setTimeout(() => {
+      const connDataAfter = fs.readFileSync(connJSONPath, 'utf8');
+      console.log(connDataAfter);
       t.notEquals(connDataAfter, connDataBefore, 'conn.json changed');
 
       fs.writeFileSync(connJSONPath, connDataBefore);

@@ -12,6 +12,8 @@ const defaultOpts: Opts = {
   writeTimeout: 2000,
 };
 
+type Updater = (prev: AddressData) => AddressData;
+
 class ConnDB {
   private readonly _map: Map<string, AddressData>;
   private readonly _notify: any;
@@ -153,19 +155,20 @@ class ConnDB {
     return this;
   }
 
-  public update(address: string, data: AddressData): ConnDB {
+  public update(address: string, x: AddressData | Updater): ConnDB {
     if (!msAddress.check(address)) {
       throw new Error('The given address is not a valid multiserver-address');
     }
-    if (!data || typeof data !== 'object') {
-      throw new Error('The given connection data should have been an object');
+    if (!x || (typeof x !== 'object' && typeof x !== 'function')) {
+      throw new Error('update() expects an object or a function');
     }
 
     const existed = this._map.has(address);
     if (!existed) return this;
 
     const previous = this._map.get(address);
-    this._map.set(address, {...previous, ...data});
+    const next = typeof x === 'function' ? x(previous) : x;
+    this._map.set(address, {...previous, ...next});
     this._notify({type: 'update', address} as ListenEvent);
     this._scheduleWrite();
     return this;
