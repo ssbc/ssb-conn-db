@@ -2,6 +2,11 @@
 
 Module that manages a local registry of connectable peers. For use with the SSB CONN family of modules.
 
+*Visual metaphor: a shelf of binders used for archival, holding static data on peers
+and their previous addresses used for connections.*
+
+![db.png](./db.png)
+
 ## Usage
 
 This module is only used to create an SSB CONN plugin, not used directly by applications.
