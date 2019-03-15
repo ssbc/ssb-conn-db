@@ -1,6 +1,6 @@
 # ssb-conn-db
 
-Module that manages a local registry of connectable peers. For use with the SSB CONN family of modules.
+Module that manages a local registry of connectable peers. For use with the SSB CONN family of modules. See also [ssb-conn-hub](https://github.com/staltz/ssb-conn-hub).
 
 *Visual metaphor: a shelf of binders used for archival, holding static data on peers
 and their previous addresses used for connections.*
