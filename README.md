@@ -42,6 +42,7 @@ const connPlugin = {
 * `connDB.entries()`: returns a new `Iterator` object that gives `[address, data]` pairs
 * `connDB.listen()`: returns a pull stream that notifies of changes made to the database, as an object `{type, address}` where `type` is either `'insert'`, `'update'`, or `'delete'`
 * `connDB.loaded()`: returns a Promise that resolves successfully when the initial database loading (read) occurs, and rejects if there was a failure to load.
+* `connDB.close()`: finishes writing any pending updates to the database, then gets ready for destroying this instance.
 
 Notice that the API above mostly mirrors the API of the JavaScript [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map).
 

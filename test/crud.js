@@ -175,7 +175,6 @@ tape('CRUD: update() works with function argument', function(t) {
 
     setTimeout(() => {
       const connDataAfter = fs.readFileSync(connJSONPath, 'utf8');
-      console.log(connDataAfter);
       t.notEquals(connDataAfter, connDataBefore, 'conn.json changed');
 
       fs.writeFileSync(connJSONPath, connDataBefore);
@@ -258,6 +257,37 @@ tape('CRUD: validates multiserver address upon insertion', function(t) {
       },
       /not a valid/,
       'set() throws an error upon invalid address',
+    );
+
+    setTimeout(() => {
+      const connDataAfter = fs.readFileSync(connJSONPath, 'utf8');
+      t.equals(connDataAfter, connDataBefore, 'conn.json did not change');
+      t.end();
+    }, 200);
+  }, 200);
+});
+
+tape('CRUD: after close(), nothing works', function(t) {
+  const dirPath = path.join(__dirname, './example');
+  const connJSONPath = path.join(dirPath, './conn.json');
+  const connDataBefore = fs.readFileSync(connJSONPath, 'utf8');
+
+  const connDB = new ConnDB({path: dirPath, writeTimeout: 0});
+  t.ok(connDB, 'connDB instance was created');
+
+  setTimeout(() => {
+    const exists = connDB.has('net:facebook.com:8008~noauth');
+    t.false(exists, 'has() can be used before close()');
+
+    connDB.close();
+    t.pass('close() succeeds silently');
+
+    t.throws(
+      () => {
+        connDB.has('net:facebook.com:8008~noauth');
+      },
+      /instance is closed/,
+      'has() throws an error after close()',
     );
 
     setTimeout(() => {

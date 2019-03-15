@@ -20,6 +20,7 @@ class ConnDB {
   private readonly _stateFile: any;
   private readonly _writeTimeout: number;
   private readonly _loadedPromise: Promise<true>;
+  private _closed: boolean;
   private _loadedResolve!: (val: true) => void;
   private _loadedReject!: (err: any) => void;
   private _scheduledWriteTask: NodeJS.Timeout | null;
@@ -36,6 +37,7 @@ class ConnDB {
         ? opts.writeTimeout
         : defaultOpts.writeTimeout;
     this._scheduledWriteTask = null;
+    this._closed = false;
     this._loadedPromise = new Promise((resolve, reject) => {
       this._loadedResolve = resolve;
       this._loadedReject = reject;
@@ -99,13 +101,21 @@ class ConnDB {
     return record;
   }
 
-  private _scheduleWrite(): void {
+  private _write(cb?: (err: any) => void): void {
+    const record = this._serialize();
+    this._stateFile.set(record, cb || (() => {}));
+  }
+
+  private _cancelScheduleWrite(): void {
     if (this._scheduledWriteTask) {
       clearTimeout(this._scheduledWriteTask);
     }
+  }
+
+  private _scheduleWrite(): void {
+    this._cancelScheduleWrite();
     this._scheduledWriteTask = setTimeout(() => {
-      const record = this._serialize();
-      this._stateFile.set(record, (_err: any) => {
+      this._write((_err: any) => {
         this._scheduledWriteTask = null;
       });
     }, this._writeTimeout);
@@ -116,6 +126,9 @@ class ConnDB {
   ///////////////
 
   public replace(address: string, data: AddressData): ConnDB {
+    if (this._closed) {
+      throw new Error('This ConnDB instance is closed, create a new one.');
+    }
     if (!msAddress.check(address)) {
       throw new Error('The given address is not a valid multiserver-address');
     }
@@ -135,6 +148,9 @@ class ConnDB {
   }
 
   public set(address: string, data: AddressData): ConnDB {
+    if (this._closed) {
+      throw new Error('This ConnDB instance is closed, create a new one.');
+    }
     if (!msAddress.check(address)) {
       throw new Error('The given address is not a valid multiserver-address');
     }
@@ -156,6 +172,9 @@ class ConnDB {
   }
 
   public update(address: string, x: AddressData | Updater): ConnDB {
+    if (this._closed) {
+      throw new Error('This ConnDB instance is closed, create a new one.');
+    }
     if (!msAddress.check(address)) {
       throw new Error('The given address is not a valid multiserver-address');
     }
@@ -175,14 +194,23 @@ class ConnDB {
   }
 
   public get(address: string): AddressData {
+    if (this._closed) {
+      throw new Error('This ConnDB instance is closed, create a new one.');
+    }
     return this._map.get(address);
   }
 
   public has(address: string): boolean {
+    if (this._closed) {
+      throw new Error('This ConnDB instance is closed, create a new one.');
+    }
     return this._map.has(address);
   }
 
   public delete(address: string): boolean {
+    if (this._closed) {
+      throw new Error('This ConnDB instance is closed, create a new one.');
+    }
     const hasDeleted = this._map.delete(address);
     if (hasDeleted) {
       this._notify({type: 'delete', address} as ListenEvent);
@@ -192,15 +220,34 @@ class ConnDB {
   }
 
   public entries() {
+    if (this._closed) {
+      throw new Error('This ConnDB instance is closed, create a new one.');
+    }
     return this._map.entries();
   }
 
   public listen() {
+    if (this._closed) {
+      throw new Error('This ConnDB instance is closed, create a new one.');
+    }
     return this._notify.listen();
   }
 
   public loaded(): Promise<true> {
+    if (this._closed) {
+      throw new Error('This ConnDB instance is closed, create a new one.');
+    }
     return this._loadedPromise;
+  }
+
+  public close() {
+    this._cancelScheduleWrite();
+    this._write();
+    this._closed = true;
+    this._map.clear();
+    (this as any)._map = null;
+    (this as any)._notify = null;
+    (this as any)._stateFile = null;
   }
 }
 
