@@ -142,3 +142,37 @@ tape('init: loaded() promise works', function(t) {
     t.end();
   });
 });
+
+tape('init: migrate legacy {host,port,key} without crashing', function(t) {
+  const dirPath = path.join(__dirname, './legacy-addr');
+  const connJSONPath = path.join(dirPath, './conn.json');
+  const gossipJSONPath = path.join(dirPath, './gossip.json');
+  t.ok(!fs.existsSync(connJSONPath), 'conn.json does not exist');
+  t.ok(fs.existsSync(gossipJSONPath), 'gossip.json exists');
+
+  const gossipDataBefore = fs.readFileSync(gossipJSONPath, 'utf8');
+
+  const connDB = new ConnDB({path: dirPath});
+  t.ok(connDB, 'connDB instance was created');
+
+  setTimeout(() => {
+    t.ok(fs.existsSync(connJSONPath), 'conn.json exists');
+    t.ok(fs.existsSync(gossipJSONPath), 'gossip.json exists');
+
+    const gossipDataAfter = fs.readFileSync(gossipJSONPath, 'utf8');
+    t.equals(gossipDataBefore, gossipDataAfter, 'gossip.json stayed untouched');
+
+    const entries = Array.from(connDB.entries());
+    t.true(entries.length === 1, 'connDB has one address');
+
+    t.equals(
+      entries[0][0],
+      'net:bloor.ansuz.xyz:8008~shs:dABVXEERk+yJSzdrDRUfF8R6FlXG7h9PaXKXlt8ma78=',
+      'address looks good',
+    );
+
+    fs.unlinkSync(connJSONPath);
+    t.pass('teardown');
+    t.end();
+  }, 500);
+});

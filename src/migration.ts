@@ -1,9 +1,17 @@
 import {AddressData} from './types';
+const ref = require('ssb-ref');
 
 export function migrateOne(old: any): [string, AddressData] {
   if (!old) throw new Error('Cannot migrate undefined entry');
   if (!old.address) {
-    throw new Error('Cannot migrate entry without field "address"');
+    try {
+      old.address = ref.toMultiServerAddress(old);
+    } catch (err) {
+      throw new Error(
+        'Cannot migrate entry without field "address" ' +
+          'or legacy {host,port,key}',
+      );
+    }
   }
 
   let copy: any;
@@ -21,8 +29,12 @@ export function migrateMany(olds: any): Record<string, AddressData> {
   if (!Array.isArray(olds)) return {};
 
   return olds.reduce((obj: any, old: any) => {
-    const [address, data] = migrateOne(old);
-    obj[address] = data;
+    try {
+      const [address, data] = migrateOne(old);
+      obj[address] = data;
+    } catch (err) {
+      console.warn(err.message || err);
+    }
     return obj;
   }, {});
 }
