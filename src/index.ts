@@ -6,6 +6,7 @@ import {migrateMany} from './migration';
 const AtomicFile = require('atomic-file');
 const Notify = require('pull-notify');
 const msAddress = require('multiserver-address');
+const debug = require('debug')('ssb:conn-db');
 
 const defaultOpts: Opts = {
   path: path.join(os.homedir(), '.ssb'),
@@ -52,6 +53,10 @@ class ConnDB {
     if (!modernExists && !legacyExists) {
       this._stateFile.set({}, () => {});
       this._loadedResolve(true);
+      debug(
+        'Created new conn.json because there was no existing ' +
+          'conn.json nor gossip.json',
+      );
       return;
     }
 
@@ -60,14 +65,17 @@ class ConnDB {
       legacyStateFile.get((err: any, oldVals: any) => {
         if (err) {
           this._loadedReject(err);
+          debug('Failed to load gossip.json, for creating conn.json');
           return;
         }
         const newVals = migrateMany(oldVals);
         return this._stateFile.set(newVals, (err2: any) => {
           if (err2) {
             this._loadedReject(err2);
+            debug('Failed to create conn.json from an existing gossip.json');
             return;
           }
+          debug('Migrated gossip.json into conn.json');
           this._load(newVals);
         });
       });
@@ -78,6 +86,7 @@ class ConnDB {
       this._stateFile.get((err: any, vals: any) => {
         if (err) {
           this._loadedReject(err);
+          debug('Failed to load conn.json');
           return;
         }
         this._load(vals);
@@ -91,6 +100,7 @@ class ConnDB {
       this._map.set(key, vals[key]);
     }
     this._loadedResolve(true);
+    debug('Loaded conn.json into ConnDB in memory');
   }
 
   private _serialize(): Record<string, AddressData> {
@@ -102,8 +112,12 @@ class ConnDB {
   }
 
   private _write(cb?: (err: any) => void): void {
+    debug('Begun serializing and writing ConnDB into conn.json');
     const record = this._serialize();
-    this._stateFile.set(record, cb || (() => {}));
+    this._stateFile.set(record, (err: any) => {
+      if (!err) debug('Done serializing and writing ConnDB into conn.json');
+      if (cb) cb(err);
+    });
   }
 
   private _cancelScheduleWrite(): void {
@@ -258,6 +272,7 @@ class ConnDB {
     (this as any)._map = null;
     (this as any)._notify = null;
     (this as any)._stateFile = null;
+    debug('Closed the ConnDB instance');
   }
 }
 
