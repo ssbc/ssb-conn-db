@@ -200,6 +200,16 @@ class ConnDB {
     return this._map.get(address);
   }
 
+  public getAddressForId(id: string): string | undefined {
+    if (this._closed) {
+      throw new Error('This ConnDB instance is closed, create a new one.');
+    }
+    for (let [address, data] of this._map.entries()) {
+      if (data.key === id) return address;
+    }
+    return undefined;
+  }
+
   public has(address: string): boolean {
     if (this._closed) {
       throw new Error('This ConnDB instance is closed, create a new one.');

@@ -25,6 +25,23 @@ tape('CRUD: get() works', function(t) {
   }, 200);
 });
 
+tape('CRUD: getAddressForId() works', function(t) {
+  const dirPath = path.join(__dirname, './example');
+  const connDB = new ConnDB({path: dirPath});
+  t.ok(connDB, 'connDB instance was created');
+  setTimeout(() => {
+    const address = connDB.getAddressForId(
+      '@dABVXEERk+yJSzdrDRUfF8R6FlXG7h9PaXKXlt8ma78=.ed25519',
+    );
+    t.equals(
+      address,
+      'net:staltz.com:8008~noauth',
+      'address exists for given id',
+    );
+    t.end();
+  }, 200);
+});
+
 tape('CRUD: entries() works', function(t) {
   const dirPath = path.join(__dirname, './example');
   const connDB = new ConnDB({path: dirPath});

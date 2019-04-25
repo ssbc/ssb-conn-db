@@ -42,6 +42,7 @@ const connPlugin = {
 * `connDB.update(address, updater)`: update a connectable peer by its `address` (string, must conform to the [multiserver address convention](https://github.com/dominictarr/multiserver-address)) with `updater` (a function where input is the previous data object and output should be the new data object). If the peer is not in the database, this method performs no operations and silently returns. Returns the `connDB` instance.
 * `connDB.replace(address, data)`: insert or update a connectable peer by its `address` (string, must conform to the [multiserver address convention](https://github.com/dominictarr/multiserver-address)) with `data` (object). If updating the data, it will *replace* the previous properties with the new properties. Returns the `connDB` instance.
 * `connDB.get(address)`: returns the data for an existing peer with the given `address`, or `undefined` if the address was not registered
+* `connDB.getAddressForId(id)`: returns the connection address for an existing peer with the given SSB feed `id`, or `undefined` if the address does not exist
 * `connDB.has(address)`: returns `true` if the given `address` is registered in the database, `false` otherwise
 * `connDB.delete(address)`: remove an address and its associated data from the database. Returns `true` if the address existed and was deleted, `false` otherwise.
 * `connDB.entries()`: returns a new `Iterator` object that gives `[address, data]` pairs
