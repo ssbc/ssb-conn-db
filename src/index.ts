@@ -46,6 +46,8 @@ class ConnDB {
     this._init(modernPath, legacyPath);
   }
 
+  //#region INTERNAL
+
   private _init(modernPath: string, legacyPath: string) {
     const modernExists = fs.existsSync(modernPath);
     const legacyExists = fs.existsSync(legacyPath);
@@ -135,9 +137,9 @@ class ConnDB {
     }, this._writeTimeout);
   }
 
-  ///////////////
-  //// PUBLIC API
-  ///////////////
+  //#endregion
+
+  //#region PUBLIC API
 
   public replace(address: string, data: AddressData): ConnDB {
     if (this._closed) {
@@ -151,10 +153,12 @@ class ConnDB {
     }
 
     const existed = this._map.has(address);
-    this._map.set(address, data);
     if (existed) {
+      const {birth} = this._map.get(address)!;
+      this._map.set(address, {birth: birth || Date.now(), ...data});
       this._notify({type: 'update', address} as ListenEvent);
     } else {
+      this._map.set(address, {birth: Date.now(), ...data});
       this._notify({type: 'insert', address} as ListenEvent);
     }
     this._scheduleWrite();
@@ -174,11 +178,15 @@ class ConnDB {
 
     const existed = this._map.has(address);
     if (existed) {
-      const previous = this._map.get(address);
-      this._map.set(address, {...previous, ...data});
+      const previous = this._map.get(address)!;
+      this._map.set(address, {
+        birth: previous.birth || Date.now(),
+        ...previous,
+        ...data,
+      });
       this._notify({type: 'update', address} as ListenEvent);
     } else {
-      this._map.set(address, data);
+      this._map.set(address, {birth: Date.now(), ...data});
       this._notify({type: 'insert', address} as ListenEvent);
     }
     this._scheduleWrite();
@@ -199,15 +207,19 @@ class ConnDB {
     const existed = this._map.has(address);
     if (!existed) return this;
 
-    const previous = this._map.get(address);
+    const previous = this._map.get(address)!;
     const next = typeof x === 'function' ? x(previous) : x;
-    this._map.set(address, {...previous, ...next});
+    this._map.set(address, {
+      birth: previous.birth || Date.now(),
+      ...previous,
+      ...next,
+    });
     this._notify({type: 'update', address} as ListenEvent);
     this._scheduleWrite();
     return this;
   }
 
-  public get(address: string): AddressData {
+  public get(address: string): AddressData | undefined {
     if (this._closed) {
       throw new Error('This ConnDB instance is closed, create a new one.');
     }
@@ -274,6 +286,8 @@ class ConnDB {
     (this as any)._stateFile = null;
     debug('Closed the ConnDB instance');
   }
+
+  //#endregion
 }
 
 export = ConnDB;
