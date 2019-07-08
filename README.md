@@ -1,6 +1,6 @@
 # ssb-conn-db
 
-Module that manages a local registry of connectable peers. For use with the SSB CONN family of modules. See also [ssb-conn-hub](https://github.com/staltz/ssb-conn-hub).
+Module that manages a local registry of connectable peers. For use with the [SSB CONN](https://github.com/staltz/ssb-conn) family of modules.
 
 *Visual metaphor: a shelf of binders used for archival, holding static data on peers
 and their previous addresses used for connections.*
@@ -9,28 +9,7 @@ and their previous addresses used for connections.*
 
 ## Usage
 
-This module is only used to create an SSB CONN plugin, not used directly by applications.
-
-```js
-const ConnDB = require('ssb-conn-db')
-
-const connPlugin = {
-  name: 'conn',
-  version: '1.0.0',
-  manifest: {
-    add: 'sync'
-  },
-  init: function(server) {
-    const connDB = new ConnDB({path: 'path/to/directory'});
-    return {
-      add: function(address, data) {
-        // NOTICE THIS
-        connDB.set(address, data);
-      },
-    };
-  }
-};
-```
+This module is only used to create an SSB CONN plugin, not used directly by applications. A ConnDB instance should be available on the CONN plugin, with the following API:
 
 ## API
 
