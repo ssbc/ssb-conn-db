@@ -11,10 +11,10 @@
   },
   "dependencies": {
     "atomic-file": "^1.1.5",
-    "pull-notify": "~0.1.1",
-    "ssb-ref": "~2.13.9",
     "debug": "~4.1.1",
-    "multiserver-address": "~1.0.1"
+    "multiserver-address": "~1.0.1",
+    "pull-notify": "~0.1.1",
+    "ssb-ref": "~2.13.9"
   },
   "devDependencies": {
     "@types/node": "^11.10.4",
