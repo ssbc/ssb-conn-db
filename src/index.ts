@@ -137,20 +137,32 @@ class ConnDB {
     }, this._writeTimeout);
   }
 
+  private _assertNotClosed() {
+    if (this._closed) {
+      throw new Error('This ConnDB instance is closed, create a new one.');
+    }
+  }
+
+  private _assertValidAddress(address: string) {
+    if (!msAddress.check(address)) {
+      throw new Error('The given address is not a valid multiserver-address');
+    }
+  }
+
+  private _assertValidData(data: AddressData) {
+    if (!data || typeof data !== 'object') {
+      throw new Error('The given connection data should have been an object');
+    }
+  }
+
   //#endregion
 
   //#region PUBLIC API
 
   public replace(address: string, data: AddressData): ConnDB {
-    if (this._closed) {
-      throw new Error('This ConnDB instance is closed, create a new one.');
-    }
-    if (!msAddress.check(address)) {
-      throw new Error('The given address is not a valid multiserver-address');
-    }
-    if (!data || typeof data !== 'object') {
-      throw new Error('The given connection data should have been an object');
-    }
+    this._assertNotClosed();
+    this._assertValidAddress(address);
+    this._assertValidData(data);
 
     const existed = this._map.has(address);
     if (existed) {
@@ -166,15 +178,9 @@ class ConnDB {
   }
 
   public set(address: string, data: AddressData): ConnDB {
-    if (this._closed) {
-      throw new Error('This ConnDB instance is closed, create a new one.');
-    }
-    if (!msAddress.check(address)) {
-      throw new Error('The given address is not a valid multiserver-address');
-    }
-    if (!data || typeof data !== 'object') {
-      throw new Error('The given connection data should have been an object');
-    }
+    this._assertNotClosed();
+    this._assertValidAddress(address);
+    this._assertValidData(data);
 
     const existed = this._map.has(address);
     if (existed) {
@@ -194,12 +200,8 @@ class ConnDB {
   }
 
   public update(address: string, x: AddressData | Updater): ConnDB {
-    if (this._closed) {
-      throw new Error('This ConnDB instance is closed, create a new one.');
-    }
-    if (!msAddress.check(address)) {
-      throw new Error('The given address is not a valid multiserver-address');
-    }
+    this._assertNotClosed();
+    this._assertValidAddress(address);
     if (!x || (typeof x !== 'object' && typeof x !== 'function')) {
       throw new Error('update() expects an object or a function');
     }
@@ -220,16 +222,14 @@ class ConnDB {
   }
 
   public get(address: string): AddressData | undefined {
-    if (this._closed) {
-      throw new Error('This ConnDB instance is closed, create a new one.');
-    }
+    this._assertNotClosed();
+
     return this._map.get(address);
   }
 
   public getAddressForId(id: string): string | undefined {
-    if (this._closed) {
-      throw new Error('This ConnDB instance is closed, create a new one.');
-    }
+    this._assertNotClosed();
+
     for (let [address, data] of this._map.entries()) {
       if (data.key === id) return address;
     }
@@ -237,16 +237,14 @@ class ConnDB {
   }
 
   public has(address: string): boolean {
-    if (this._closed) {
-      throw new Error('This ConnDB instance is closed, create a new one.');
-    }
+    this._assertNotClosed();
+
     return this._map.has(address);
   }
 
   public delete(address: string): boolean {
-    if (this._closed) {
-      throw new Error('This ConnDB instance is closed, create a new one.');
-    }
+    this._assertNotClosed();
+
     const hasDeleted = this._map.delete(address);
     if (hasDeleted) {
       this._notify({type: 'delete', address} as ListenEvent);
@@ -256,23 +254,20 @@ class ConnDB {
   }
 
   public entries() {
-    if (this._closed) {
-      throw new Error('This ConnDB instance is closed, create a new one.');
-    }
+    this._assertNotClosed();
+
     return this._map.entries();
   }
 
   public listen() {
-    if (this._closed) {
-      throw new Error('This ConnDB instance is closed, create a new one.');
-    }
+    this._assertNotClosed();
+
     return this._notify.listen();
   }
 
   public loaded(): Promise<true> {
-    if (this._closed) {
-      throw new Error('This ConnDB instance is closed, create a new one.');
-    }
+    this._assertNotClosed();
+
     return this._loadedPromise;
   }
 
