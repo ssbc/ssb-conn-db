@@ -27,7 +27,7 @@ class ConnDB {
   private _scheduledWriteTask: NodeJS.Timeout | null;
 
   constructor(opts: Partial<Opts>) {
-    const dirPath = opts.path || defaultOpts.path;
+    const dirPath = opts.path ?? defaultOpts.path;
     const modernPath = path.join(dirPath, 'conn.json');
     const legacyPath = path.join(dirPath, 'gossip.json');
     this._map = new Map<string, AddressData>();
@@ -167,7 +167,7 @@ class ConnDB {
     const existed = this._map.has(address);
     if (existed) {
       const {birth} = this._map.get(address)!;
-      this._map.set(address, {birth: birth || Date.now(), ...data});
+      this._map.set(address, {birth: birth ?? Date.now(), ...data});
       this._notify({type: 'update', address} as ListenEvent);
     } else {
       this._map.set(address, {birth: Date.now(), ...data});
@@ -186,7 +186,7 @@ class ConnDB {
     if (existed) {
       const previous = this._map.get(address)!;
       this._map.set(address, {
-        birth: previous.birth || Date.now(),
+        birth: previous.birth ?? Date.now(),
         ...previous,
         ...data,
       });
@@ -212,7 +212,7 @@ class ConnDB {
     const previous = this._map.get(address)!;
     const next = typeof x === 'function' ? x(previous) : x;
     this._map.set(address, {
-      birth: previous.birth || Date.now(),
+      birth: previous.birth ?? Date.now(),
       ...previous,
       ...next,
     });
