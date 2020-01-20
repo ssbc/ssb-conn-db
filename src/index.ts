@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as os from 'os';
 import {AddressData, ListenEvent, Opts} from './types';
 import {migrateMany} from './migration';
+import {selfHealingJSONCodec} from './atomic-file-codecs';
 const AtomicFile = require('atomic-file');
 const Notify = require('pull-notify');
 const msAddress = require('multiserver-address');
@@ -32,7 +33,7 @@ class ConnDB {
     const legacyPath = path.join(dirPath, 'gossip.json');
     this._map = new Map<string, AddressData>();
     this._notify = Notify();
-    this._stateFile = AtomicFile(modernPath);
+    this._stateFile = AtomicFile(modernPath, '~', selfHealingJSONCodec);
     this._writeTimeout =
       typeof opts.writeTimeout === 'number'
         ? opts.writeTimeout

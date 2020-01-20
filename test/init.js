@@ -176,3 +176,32 @@ tape('init: migrate legacy {host,port,key} without crashing', function(t) {
     t.end();
   }, 500);
 });
+
+tape('init: recover from corrupted conn.json file', function(t) {
+  const dirPath = path.join(__dirname, './corrupted');
+  const connDB = new ConnDB({path: dirPath});
+  t.ok(connDB, 'connDB instance was created');
+  const entries = Array.from(connDB.entries());
+  t.equals(entries.length, 0, 'before loaded(), there is no data');
+  connDB.loaded().then(() => {
+    const entries = Array.from(connDB.entries());
+    t.equals(entries.length, 1, 'after loaded(), there is data');
+    const [address, data] = entries[0];
+    t.equals(address, 'net:staltz.com:8008~noauth', 'the address looks ok');
+    t.equals(data.source, 'stored', 'the data for that address looks ok');
+    t.end();
+  });
+});
+
+tape('init: cannot recover from totally broken conn.json file', function(t) {
+  const dirPath = path.join(__dirname, './irrecoverable');
+  const connDB = new ConnDB({path: dirPath});
+  t.ok(connDB, 'connDB instance was created');
+  const entries = Array.from(connDB.entries());
+  t.equals(entries.length, 0, 'before loaded(), there is no data');
+  connDB.loaded().then(() => {
+    const entries = Array.from(connDB.entries());
+    t.equals(entries.length, 0, 'after loaded(), there is data');
+    t.end();
+  });
+});
