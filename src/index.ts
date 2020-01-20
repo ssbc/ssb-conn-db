@@ -17,8 +17,8 @@ type Updater = (prev: AddressData) => AddressData;
 
 class ConnDB {
   private readonly _map: Map<string, AddressData>;
-  private readonly _notify: any;
-  private readonly _stateFile: any;
+  private readonly _notify: CallableFunction & Record<string, any>;
+  private readonly _stateFile: Record<string, any>;
   private readonly _writeTimeout: number;
   private readonly _loadedPromise: Promise<true>;
   private _closed: boolean;
