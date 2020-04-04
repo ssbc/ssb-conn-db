@@ -3,7 +3,7 @@ const ConnDB = require('../lib');
 const fs = require('fs');
 const path = require('path');
 
-tape('CRUD: has() works', function(t) {
+tape('CRUD: has() works', function (t) {
   const dirPath = path.join(__dirname, './example');
   const connDB = new ConnDB({path: dirPath});
   t.ok(connDB, 'connDB instance was created');
@@ -14,7 +14,7 @@ tape('CRUD: has() works', function(t) {
   }, 200);
 });
 
-tape('CRUD: get() works', function(t) {
+tape('CRUD: get() works', function (t) {
   const dirPath = path.join(__dirname, './example');
   const connDB = new ConnDB({path: dirPath});
   t.ok(connDB, 'connDB instance was created');
@@ -25,7 +25,7 @@ tape('CRUD: get() works', function(t) {
   }, 200);
 });
 
-tape('CRUD: getAddressForId() works', function(t) {
+tape('CRUD: getAddressForId() works', function (t) {
   const dirPath = path.join(__dirname, './example');
   const connDB = new ConnDB({path: dirPath});
   t.ok(connDB, 'connDB instance was created');
@@ -42,7 +42,7 @@ tape('CRUD: getAddressForId() works', function(t) {
   }, 200);
 });
 
-tape('CRUD: entries() works', function(t) {
+tape('CRUD: entries() works', function (t) {
   const dirPath = path.join(__dirname, './example');
   const connDB = new ConnDB({path: dirPath});
   t.ok(connDB, 'connDB instance was created');
@@ -56,7 +56,7 @@ tape('CRUD: entries() works', function(t) {
   }, 200);
 });
 
-tape('CRUD: replace() works', function(t) {
+tape('CRUD: replace() works', function (t) {
   const dirPath = path.join(__dirname, './example');
   const connJSONPath = path.join(dirPath, './conn.json');
   const connDataBefore = fs.readFileSync(connJSONPath, 'utf8');
@@ -85,7 +85,7 @@ tape('CRUD: replace() works', function(t) {
   }, 200);
 });
 
-tape('CRUD: set() works', function(t) {
+tape('CRUD: set() works', function (t) {
   const dirPath = path.join(__dirname, './example');
   const connJSONPath = path.join(dirPath, './conn.json');
   const connDataBefore = fs.readFileSync(connJSONPath, 'utf8');
@@ -114,7 +114,7 @@ tape('CRUD: set() works', function(t) {
   }, 200);
 });
 
-tape('CRUD: set() with undefined deletes the property', function(t) {
+tape('CRUD: set() with undefined deletes the property', function (t) {
   const dirPath = path.join(__dirname, './example');
   const connJSONPath = path.join(dirPath, './conn.json');
   const connDataBefore = fs.readFileSync(connJSONPath, 'utf8');
@@ -143,7 +143,7 @@ tape('CRUD: set() with undefined deletes the property', function(t) {
   }, 200);
 });
 
-tape('CRUD: update() works with object argument', function(t) {
+tape('CRUD: update() works with object argument', function (t) {
   const dirPath = path.join(__dirname, './example');
   const connJSONPath = path.join(dirPath, './conn.json');
   const connDataBefore = fs.readFileSync(connJSONPath, 'utf8');
@@ -172,7 +172,7 @@ tape('CRUD: update() works with object argument', function(t) {
   }, 200);
 });
 
-tape('CRUD: update() works with function argument', function(t) {
+tape('CRUD: update() works with function argument', function (t) {
   const dirPath = path.join(__dirname, './example');
   const connJSONPath = path.join(dirPath, './conn.json');
   const connDataBefore = fs.readFileSync(connJSONPath, 'utf8');
@@ -184,7 +184,7 @@ tape('CRUD: update() works with function argument', function(t) {
     const exists = connDB.has('net:staltz.com:8008~noauth');
     t.true(exists, 'address to be updated is in the database');
 
-    const connDB2 = connDB.update('net:staltz.com:8008~noauth', prev => ({
+    const connDB2 = connDB.update('net:staltz.com:8008~noauth', (prev) => ({
       source: prev.source.toUpperCase(),
     }));
 
@@ -201,7 +201,7 @@ tape('CRUD: update() works with function argument', function(t) {
   }, 200);
 });
 
-tape('CRUD: update() is incapable of inserting', function(t) {
+tape('CRUD: update() is incapable of inserting', function (t) {
   const dirPath = path.join(__dirname, './example');
   const connJSONPath = path.join(dirPath, './conn.json');
   const connDataBefore = fs.readFileSync(connJSONPath, 'utf8');
@@ -230,7 +230,7 @@ tape('CRUD: update() is incapable of inserting', function(t) {
   }, 200);
 });
 
-tape('CRUD: delete() works', function(t) {
+tape('CRUD: delete() works', function (t) {
   const dirPath = path.join(__dirname, './example');
   const connJSONPath = path.join(dirPath, './conn.json');
   const connDataBefore = fs.readFileSync(connJSONPath, 'utf8');
@@ -256,7 +256,7 @@ tape('CRUD: delete() works', function(t) {
   }, 200);
 });
 
-tape('CRUD: validates multiserver address upon insertion', function(t) {
+tape('CRUD: validates multiserver address upon insertion', function (t) {
   const dirPath = path.join(__dirname, './example');
   const connJSONPath = path.join(dirPath, './conn.json');
   const connDataBefore = fs.readFileSync(connJSONPath, 'utf8');
@@ -284,7 +284,7 @@ tape('CRUD: validates multiserver address upon insertion', function(t) {
   }, 200);
 });
 
-tape('CRUD: after close(), nothing works', function(t) {
+tape('CRUD: after close(), nothing works', function (t) {
   const dirPath = path.join(__dirname, './example');
   const connJSONPath = path.join(dirPath, './conn.json');
   const connDataBefore = fs.readFileSync(connJSONPath, 'utf8');

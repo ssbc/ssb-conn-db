@@ -17,14 +17,14 @@ const defaultOpts: Opts = {
 type Updater = (prev: AddressData) => AddressData;
 
 class ConnDB {
-  private readonly _map: Map<string, AddressData>;
-  private readonly _notify: CallableFunction & Record<string, any>;
-  private readonly _stateFile: Record<string, any>;
+  private readonly _map?: Map<string, AddressData>;
+  private readonly _notify?: CallableFunction & Record<string, any>;
+  private readonly _stateFile?: Record<string, any>;
   private readonly _writeTimeout: number;
   private readonly _loadedPromise: Promise<true>;
   private _closed: boolean;
   private _loadedResolve!: (val: true) => void;
-  private _loadedReject!: (err: any) => void;
+  private _loadedReject!: (err: unknown) => void;
   private _scheduledWriteTask: NodeJS.Timeout | null;
 
   constructor(opts: Partial<Opts>) {
@@ -54,7 +54,7 @@ class ConnDB {
     const legacyExists = fs.existsSync(legacyPath);
 
     if (!modernExists && !legacyExists) {
-      this._stateFile.set({}, () => {});
+      this._stateFile!.set({}, () => {});
       this._loadedResolve(true);
       debug(
         'Created new conn.json because there was no existing ' +
@@ -65,14 +65,14 @@ class ConnDB {
 
     if (!modernExists && legacyExists) {
       const legacyStateFile = AtomicFile(legacyPath);
-      legacyStateFile.get((err: any, oldVals: any) => {
+      legacyStateFile.get((err: unknown, oldVals: any) => {
         if (err) {
           this._loadedReject(err);
           debug('Failed to load gossip.json, for creating conn.json');
           return;
         }
         const newVals = migrateMany(oldVals);
-        return this._stateFile.set(newVals, (err2: any) => {
+        return this._stateFile!.set(newVals, (err2: any) => {
           if (err2) {
             this._loadedReject(err2);
             debug('Failed to create conn.json from an existing gossip.json');
@@ -86,7 +86,7 @@ class ConnDB {
     }
 
     if (modernExists) {
-      this._stateFile.get((err: any, vals: any) => {
+      this._stateFile!.get((err: unknown, vals: any) => {
         if (err) {
           this._loadedReject(err);
           debug('Failed to load conn.json');
@@ -100,7 +100,7 @@ class ConnDB {
   private _load(vals: Record<string, AddressData>): void {
     const keys = Object.keys(vals);
     for (let key of keys) {
-      this._map.set(key, vals[key]);
+      this._map!.set(key, vals[key]);
     }
     this._loadedResolve(true);
     debug('Loaded conn.json into ConnDB in memory');
@@ -108,16 +108,19 @@ class ConnDB {
 
   private _serialize(): Record<string, AddressData> {
     const record: Record<string, AddressData> = {};
-    for (let [address, data] of this._map.entries()) {
+    for (let [address, data] of this._map!.entries()) {
       record[address] = data;
     }
     return record;
   }
 
-  private _write(cb?: (err: any) => void): void {
+  private _write(cb?: (err: unknown) => void): void {
+    if (!this._map) return;
+    if (!this._stateFile) return;
+
     debug('Begun serializing and writing ConnDB into conn.json');
     const record = this._serialize();
-    this._stateFile.set(record, (err: any) => {
+    this._stateFile.set(record, (err: unknown) => {
       if (!err) debug('Done serializing and writing ConnDB into conn.json');
       if (cb) cb(err);
     });
@@ -132,7 +135,7 @@ class ConnDB {
   private _scheduleWrite(): void {
     this._cancelScheduleWrite();
     this._scheduledWriteTask = setTimeout(() => {
-      this._write((_err: any) => {
+      this._write((_err: unknown) => {
         this._scheduledWriteTask = null;
       });
     }, this._writeTimeout);
@@ -165,14 +168,14 @@ class ConnDB {
     this._assertValidAddress(address);
     this._assertValidData(data);
 
-    const existed = this._map.has(address);
+    const existed = this._map!.has(address);
     if (existed) {
-      const {birth} = this._map.get(address)!;
-      this._map.set(address, {birth: birth ?? Date.now(), ...data});
-      this._notify({type: 'update', address} as ListenEvent);
+      const {birth} = this._map!.get(address)!;
+      this._map!.set(address, {birth: birth ?? Date.now(), ...data});
+      this._notify!({type: 'update', address} as ListenEvent);
     } else {
-      this._map.set(address, {birth: Date.now(), ...data});
-      this._notify({type: 'insert', address} as ListenEvent);
+      this._map!.set(address, {birth: Date.now(), ...data});
+      this._notify!({type: 'insert', address} as ListenEvent);
     }
     this._scheduleWrite();
     return this;
@@ -183,18 +186,18 @@ class ConnDB {
     this._assertValidAddress(address);
     this._assertValidData(data);
 
-    const existed = this._map.has(address);
+    const existed = this._map!.has(address);
     if (existed) {
-      const previous = this._map.get(address)!;
-      this._map.set(address, {
+      const previous = this._map!.get(address)!;
+      this._map!.set(address, {
         birth: previous.birth ?? Date.now(),
         ...previous,
         ...data,
       });
-      this._notify({type: 'update', address} as ListenEvent);
+      this._notify!({type: 'update', address} as ListenEvent);
     } else {
-      this._map.set(address, {birth: Date.now(), ...data});
-      this._notify({type: 'insert', address} as ListenEvent);
+      this._map!.set(address, {birth: Date.now(), ...data});
+      this._notify!({type: 'insert', address} as ListenEvent);
     }
     this._scheduleWrite();
     return this;
@@ -207,17 +210,17 @@ class ConnDB {
       throw new Error('update() expects an object or a function');
     }
 
-    const existed = this._map.has(address);
+    const existed = this._map!.has(address);
     if (!existed) return this;
 
-    const previous = this._map.get(address)!;
+    const previous = this._map!.get(address)!;
     const next = typeof x === 'function' ? x(previous) : x;
-    this._map.set(address, {
+    this._map!.set(address, {
       birth: previous.birth ?? Date.now(),
       ...previous,
       ...next,
     });
-    this._notify({type: 'update', address} as ListenEvent);
+    this._notify!({type: 'update', address} as ListenEvent);
     this._scheduleWrite();
     return this;
   }
@@ -225,13 +228,13 @@ class ConnDB {
   public get(address: string): AddressData | undefined {
     this._assertNotClosed();
 
-    return this._map.get(address);
+    return this._map!.get(address);
   }
 
   public getAddressForId(id: string): string | undefined {
     this._assertNotClosed();
 
-    for (let [address, data] of this._map.entries()) {
+    for (let [address, data] of this._map!.entries()) {
       if (data.key === id) return address;
     }
     return undefined;
@@ -240,15 +243,15 @@ class ConnDB {
   public has(address: string): boolean {
     this._assertNotClosed();
 
-    return this._map.has(address);
+    return this._map!.has(address);
   }
 
   public delete(address: string): boolean {
     this._assertNotClosed();
 
-    const hasDeleted = this._map.delete(address);
+    const hasDeleted = this._map!.delete(address);
     if (hasDeleted) {
-      this._notify({type: 'delete', address} as ListenEvent);
+      this._notify!({type: 'delete', address} as ListenEvent);
       this._scheduleWrite();
     }
     return hasDeleted;
@@ -257,13 +260,13 @@ class ConnDB {
   public entries() {
     this._assertNotClosed();
 
-    return this._map.entries();
+    return this._map!.entries();
   }
 
   public listen() {
     this._assertNotClosed();
 
-    return this._notify.listen();
+    return this._notify!.listen();
   }
 
   public loaded(): Promise<true> {
@@ -273,13 +276,13 @@ class ConnDB {
   }
 
   public close() {
+    this._closed = true;
     this._cancelScheduleWrite();
     this._write();
-    this._closed = true;
-    this._map.clear();
-    (this as any)._map = null;
-    (this as any)._notify = null;
-    (this as any)._stateFile = null;
+    this._map?.clear();
+    (this as any)._map = void 0;
+    (this as any)._notify = void 0;
+    (this as any)._stateFile = void 0;
     debug('Closed the ConnDB instance');
   }
 

@@ -20,7 +20,7 @@
     "@types/node": "^11.10.4",
     "pull-stream": "^3.6.9",
     "tape": "^4.9.2",
-    "typescript": "3.7.x"
+    "typescript": "3.8.x"
   },
   "scripts": {
     "typescript": "tsc",
