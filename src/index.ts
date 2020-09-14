@@ -49,52 +49,65 @@ class ConnDB {
 
   //#region INTERNAL
 
+  private _fileExists(path: string, cb: (exists: boolean) => void) {
+    if (typeof localStorage === "undefined" || localStorage === null)
+      fs.exists(path, cb)
+    else { // in browser
+      const file = AtomicFile(path);
+      file.get((err: unknown) => {
+        if (err) cb(false);
+        else cb(true)
+      })
+    }
+  }
+
   private _init(modernPath: string, legacyPath: string) {
-    const modernExists = fs.existsSync(modernPath);
-    const legacyExists = fs.existsSync(legacyPath);
-
-    if (!modernExists && !legacyExists) {
-      this._stateFile!.set({}, () => {});
-      this._loadedResolve(true);
-      debug(
-        'Created new conn.json because there was no existing ' +
-          'conn.json nor gossip.json',
-      );
-      return;
-    }
-
-    if (!modernExists && legacyExists) {
-      const legacyStateFile = AtomicFile(legacyPath);
-      legacyStateFile.get((err: unknown, oldVals: any) => {
-        if (err) {
-          this._loadedReject(err);
-          debug('Failed to load gossip.json, for creating conn.json');
+    this._fileExists(modernPath, (modernExists: boolean) => {
+      this._fileExists(legacyPath, (legacyExists: boolean) => {
+        if (!modernExists && !legacyExists) {
+          this._stateFile!.set({}, () => {});
+          this._loadedResolve(true);
+          debug(
+            'Created new conn.json because there was no existing ' +
+              'conn.json nor gossip.json',
+          );
           return;
         }
-        const newVals = migrateMany(oldVals);
-        return this._stateFile!.set(newVals, (err2: any) => {
-          if (err2) {
-            this._loadedReject(err2);
-            debug('Failed to create conn.json from an existing gossip.json');
-            return;
-          }
-          debug('Migrated gossip.json into conn.json');
-          this._load(newVals);
-        });
-      });
-      return;
-    }
 
-    if (modernExists) {
-      this._stateFile!.get((err: unknown, vals: any) => {
-        if (err) {
-          this._loadedReject(err);
-          debug('Failed to load conn.json');
+        if (!modernExists && legacyExists) {
+          const legacyStateFile = AtomicFile(legacyPath);
+          legacyStateFile.get((err: unknown, oldVals: any) => {
+            if (err) {
+              this._loadedReject(err);
+              debug('Failed to load gossip.json, for creating conn.json');
+              return;
+            }
+            const newVals = migrateMany(oldVals);
+            return this._stateFile!.set(newVals, (err2: any) => {
+              if (err2) {
+                this._loadedReject(err2);
+                debug('Failed to create conn.json from an existing gossip.json');
+                return;
+              }
+              debug('Migrated gossip.json into conn.json');
+              this._load(newVals);
+            });
+          });
           return;
         }
-        this._load(vals);
-      });
-    }
+
+        if (modernExists) {
+          this._stateFile!.get((err: unknown, vals: any) => {
+            if (err) {
+              this._loadedReject(err);
+              debug('Failed to load conn.json');
+              return;
+            }
+            this._load(vals);
+          });
+        }
+      })
+    })
   }
 
   private _load(vals: Record<string, AddressData>): void {

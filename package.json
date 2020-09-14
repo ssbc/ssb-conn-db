@@ -10,7 +10,7 @@
     "url": "git://github.com/staltz/ssb-conn-db.git"
   },
   "dependencies": {
-    "atomic-file": "^1.1.5",
+    "atomic-file": "^2.1.1",
     "debug": "~4.1.1",
     "multiserver-address": "~1.0.1",
     "pull-notify": "~0.1.1",
