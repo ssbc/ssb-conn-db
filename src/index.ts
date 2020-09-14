@@ -50,14 +50,15 @@ class ConnDB {
   //#region INTERNAL
 
   private _fileExists(path: string, cb: (exists: boolean) => void) {
-    if (typeof localStorage === "undefined" || localStorage === null)
-      fs.exists(path, cb)
-    else { // in browser
+    if (typeof localStorage === 'undefined' || localStorage === null) {
+      fs.exists(path, cb);
+    } else {
+      // in browser
       const file = AtomicFile(path);
       file.get((err: unknown) => {
         if (err) cb(false);
-        else cb(true)
-      })
+        else cb(true);
+      });
     }
   }
 
@@ -86,7 +87,9 @@ class ConnDB {
             return this._stateFile!.set(newVals, (err2: any) => {
               if (err2) {
                 this._loadedReject(err2);
-                debug('Failed to create conn.json from an existing gossip.json');
+                debug(
+                  'Failed to create conn.json from an existing gossip.json',
+                );
                 return;
               }
               debug('Migrated gossip.json into conn.json');
@@ -106,8 +109,8 @@ class ConnDB {
             this._load(vals);
           });
         }
-      })
-    })
+      });
+    });
   }
 
   private _load(vals: Record<string, AddressData>): void {
