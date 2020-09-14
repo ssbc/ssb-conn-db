@@ -51,7 +51,7 @@ class ConnDB {
 
   private _fileExists(path: string, cb: (exists: boolean) => void) {
     if (typeof localStorage === 'undefined' || localStorage === null) {
-      fs.exists(path, cb);
+      cb(fs.existsSync(path));
     } else {
       // in browser
       const file = AtomicFile(path);
