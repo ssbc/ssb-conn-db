@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "atomic-file": "^2.1.1",
-    "debug": "~4.1.1",
+    "debug": "^4.3.1",
     "multiserver-address": "~1.0.1",
     "pull-notify": "~0.1.1",
     "ssb-ref": "~2.13.9"
