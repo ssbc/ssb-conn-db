@@ -4,7 +4,10 @@ import * as os from 'os';
 import {AddressData, ListenEvent, Opts} from './types';
 import {migrateMany} from './migration';
 import {selfHealingJSONCodec} from './atomic-file-codecs';
-const AtomicFile = require('atomic-file');
+const atomic = require('atomic-file-rw') as Pick<
+  typeof fs,
+  'readFile' | 'writeFile'
+>;
 const Notify = require('pull-notify');
 const msAddress = require('multiserver-address');
 const debug = require('debug')('ssb:conn-db');
@@ -19,9 +22,9 @@ type Updater = (prev: AddressData) => AddressData;
 class ConnDB {
   private readonly _map?: Map<string, AddressData>;
   private readonly _notify?: CallableFunction & Record<string, any>;
-  private readonly _stateFile?: Record<string, any>;
   private readonly _writeTimeout: number;
   private readonly _loadedPromise: Promise<true>;
+  private readonly _modernPath: string;
   private _closed: boolean;
   private _loadedResolve!: (val: true) => void;
   private _loadedReject!: (err: unknown) => void;
@@ -29,11 +32,10 @@ class ConnDB {
 
   constructor(opts: Partial<Opts>) {
     const dirPath = opts.path ?? defaultOpts.path;
-    const modernPath = path.join(dirPath, 'conn.json');
     const legacyPath = path.join(dirPath, 'gossip.json');
+    this._modernPath = path.join(dirPath, 'conn.json');
     this._map = new Map<string, AddressData>();
     this._notify = Notify();
-    this._stateFile = AtomicFile(modernPath, '~', selfHealingJSONCodec);
     this._writeTimeout =
       typeof opts.writeTimeout === 'number'
         ? opts.writeTimeout
@@ -44,7 +46,7 @@ class ConnDB {
       this._loadedResolve = resolve;
       this._loadedReject = reject;
     });
-    this._init(modernPath, legacyPath);
+    this._init(this._modernPath, legacyPath);
   }
 
   //#region INTERNAL
@@ -54,8 +56,7 @@ class ConnDB {
       cb(fs.existsSync(path));
     } else {
       // in browser
-      const file = AtomicFile(path);
-      file.get((err: unknown) => {
+      atomic.readFile(path, (err: unknown) => {
         if (err) cb(false);
         else cb(true);
       });
@@ -66,7 +67,7 @@ class ConnDB {
     this._fileExists(modernPath, (modernExists: boolean) => {
       this._fileExists(legacyPath, (legacyExists: boolean) => {
         if (!modernExists && !legacyExists) {
-          this._stateFile!.set({}, () => {});
+          atomic.writeFile(modernPath, '{}', 'utf8', () => {});
           this._loadedResolve(true);
           debug(
             'Created new conn.json because there was no existing ' +
@@ -76,15 +77,16 @@ class ConnDB {
         }
 
         if (!modernExists && legacyExists) {
-          const legacyStateFile = AtomicFile(legacyPath);
-          legacyStateFile.get((err: unknown, oldVals: any) => {
+          atomic.readFile(legacyPath, 'utf8', (err, data) => {
             if (err) {
               this._loadedReject(err);
               debug('Failed to load gossip.json, for creating conn.json');
               return;
             }
+            const oldVals = JSON.parse(data.toString());
             const newVals = migrateMany(oldVals);
-            return this._stateFile!.set(newVals, (err2: any) => {
+            const json = selfHealingJSONCodec.encode(newVals);
+            atomic.writeFile(modernPath, json, 'utf8', (err2) => {
               if (err2) {
                 this._loadedReject(err2);
                 debug(
@@ -100,12 +102,13 @@ class ConnDB {
         }
 
         if (modernExists) {
-          this._stateFile!.get((err: unknown, vals: any) => {
+          atomic.readFile(modernPath, 'utf8', (err, data) => {
             if (err) {
               this._loadedReject(err);
               debug('Failed to load conn.json');
               return;
             }
+            const vals = selfHealingJSONCodec.decode(data);
             this._load(vals);
           });
         }
@@ -132,11 +135,11 @@ class ConnDB {
 
   private _write(cb?: (err: unknown) => void): void {
     if (!this._map) return;
-    if (!this._stateFile) return;
 
     debug('Begun serializing and writing ConnDB into conn.json');
     const record = this._serialize();
-    this._stateFile.set(record, (err: unknown) => {
+    const json = selfHealingJSONCodec.encode(record);
+    atomic.writeFile(this._modernPath, json, 'utf8', (err) => {
       if (!err) debug('Done serializing and writing ConnDB into conn.json');
       if (cb) cb(err);
     });
