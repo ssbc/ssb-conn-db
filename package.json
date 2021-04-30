@@ -19,12 +19,14 @@
   "devDependencies": {
     "@types/node": "^11.10.4",
     "pull-stream": "^3.6.9",
-    "tape": "^4.9.2",
+    "tap-bail": "^1.0.0",
+    "tap-spec": "^5.0.0",
+    "tape": "^5.2.2",
     "typescript": "3.8.x"
   },
   "scripts": {
     "typescript": "tsc",
-    "tape": "set -e; for t in test/*.js; do node $t; done",
+    "tape": "tape test/*.js | tap-bail | tap-spec",
     "test": "npm run typescript && npm run tape"
   },
   "author": "Andre Staltz <contact@staltz.com> (http://staltz.com)",
