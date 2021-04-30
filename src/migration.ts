@@ -1,11 +1,11 @@
 import {AddressData} from './types';
-const ref = require('ssb-ref');
+const Ref = require('ssb-ref');
 
 export function migrateOne(old: any): [string, AddressData] {
   if (!old) throw new Error('Cannot migrate undefined entry');
   if (!old.address) {
     try {
-      old.address = ref.toMultiServerAddress(old);
+      old.address = Ref.toMultiServerAddress(old);
     } catch (err) {
       throw new Error(
         'Cannot migrate entry without field "address" ' +
