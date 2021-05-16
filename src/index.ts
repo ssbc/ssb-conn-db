@@ -117,9 +117,8 @@ class ConnDB {
   }
 
   private _load(vals: Record<string, AddressData>): void {
-    const keys = Object.keys(vals);
-    for (let key of keys) {
-      this._map!.set(key, vals[key]);
+    for (const [addr, data] of Object.entries(vals)) {
+      this._map!.set(addr, data);
     }
     this._loadedResolve(true);
     debug('Loaded conn.json into ConnDB in memory');
