@@ -9,7 +9,7 @@ export const selfHealingJSONCodec = {
     return JSON.stringify(obj, null, 2);
   },
   decode: function(input: any) {
-    const str: string = input ? input.toString() : "";
+    if (!input) return {};
     const MAX_TRIM = 10;
     let foundCorruption = false;
     for (let i = 0; i < MAX_TRIM; i++) {
