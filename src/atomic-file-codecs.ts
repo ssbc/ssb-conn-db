@@ -10,6 +10,7 @@ export const selfHealingJSONCodec = {
   },
   decode: function(input: any) {
     if (!input) return {};
+    const str: string = input.toString();
     const MAX_TRIM = 10;
     let foundCorruption = false;
     for (let i = 0; i < MAX_TRIM; i++) {
