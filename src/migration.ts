@@ -32,7 +32,7 @@ export function migrateMany(olds: any): Record<string, AddressData> {
     try {
       const [address, data] = migrateOne(old);
       obj[address] = data;
-    } catch (err) {
+    } catch (err: any) {
       console.warn(err.message || err);
     }
     return obj;

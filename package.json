@@ -10,10 +10,10 @@
     "url": "git://github.com/staltz/ssb-conn-db.git"
   },
   "dependencies": {
-    "atomic-file-rw": "^0.2.2",
+    "atomic-file-rw": "^0.3.0",
     "debug": "^4.3.1",
     "multiserver-address": "~1.0.1",
-    "pull-notify": "~0.1.1",
+    "pull-notify": "~0.1.2",
     "ssb-ref": ">=2.13.9"
   },
   "devDependencies": {
@@ -21,8 +21,8 @@
     "pull-stream": "^3.6.9",
     "tap-bail": "^1.0.0",
     "tap-spec": "^5.0.0",
-    "tape": "^5.2.2",
-    "typescript": "4.2.x"
+    "tape": "^5.5.3",
+    "typescript": "4.7.x"
   },
   "scripts": {
     "typescript": "tsc",
